@@ -3,14 +3,15 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
+
+	"io/ioutil"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"io/ioutil"
 )
 
 func errHandle(err error) {
@@ -24,19 +25,18 @@ func main() {
 
 	fileList, err := ioutil.ReadDir("./books")
 	errHandle(err)
-	var files []string
-	// var bookInfo = make(map[string]string)
-	var booksData = make(map[string][]string)
+	files := make(map[string]map[string]string)
+	booksData := make(map[string][]string)
 	for _, f := range fileList {
 		if !f.IsDir() {
-			fileName := f.Name()
-			files = append(files, fileName)
+			file := make(map[string]string)
+			file["size"] = strconv.FormatInt(f.Size(), 10)
+			files[f.Name()] = file
 		}
 	}
-	// 12 * 12
-	for _, file := range files {
-		bookName := "./books/" + file
-		fmt.Println(bookName)
+	// 12列 * 11行
+	for name, fileInfo := range files {
+		bookName := "./books/" + name
 		f, err := os.Open(bookName)
 		errHandle(err)
 		reader := bufio.NewReader(f)
@@ -74,21 +74,27 @@ func main() {
 				showList = append(showList, string(runeLine[12*num:len]))
 			}
 		}
-		booksData[file] = showList
+		booksData[name] = showList
+		pages := 0
+		if len(showList)%11 == 0 {
+			pages = len(showList) / 11
+		} else {
+			pages = len(showList)/11 + 1
+		}
+		fileInfo["pages"] = strconv.Itoa(pages)
 	}
-	for _, file := range files {
-		s.BindHandler("/"+file+"/{page}", func(r *ghttp.Request) {
-			fmt.Printf("URL-%v\n", r.Request.URL.Path)
+	for name := range files {
+		s.BindHandler("/"+name+"/{page}", func(r *ghttp.Request) {
 			res := strings.Split(r.Request.URL.Path, "/")
 			bookData := booksData[res[1]]
 			page := r.Get("page").Int()
-			var startIndex int = 12 * (page - 1)
+			var startIndex int = 11 * (page - 1)
 			var list []string
 			if startIndex >= len(bookData) {
 				r.Response.Writef("%v\n", "已读完")
 				return
 			}
-			for i := 0; i < 12; i++ {
+			for i := 0; i < 11; i++ {
 				if startIndex+i >= len(bookData) {
 					break
 				}

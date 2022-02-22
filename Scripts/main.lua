@@ -26,8 +26,14 @@ function printTable(tbl, lv)
     print(lv .. "},")
 end
 
+function getTableLen(t)
+    local count = 0
+    for _, _ in pairs(t) do count = count + 1 end
+    return count
+end
+
 local PAGE, page = "LIST", 1
-local einkBooksTable, einkBooksIndex = {}, 1
+local einkBooksTable, einkBooksIndex, einkBooksTableLen = {}, 1, 0
 local gBTN, gPressTime, gShortCb, gLongCb, gDoubleCb, gBtnStatus = 0, 1000, nil,
                                                                    nil, nil,
                                                                    "IDLE"
@@ -72,43 +78,55 @@ end
 function showBookList(books, index)
     einkShowStr(0, 16, "图书列表", 0, eink.font_opposansm12_chinese, true)
     local ifShow = false
-    for i = 1, #books do
-        if i == #books then ifShow = true end
+    local len = getTableLen(books)
+    if len == 0 then
+        -- TODO 显示无图书
+        return
+    end
+    local i = 1
+    for k, v in pairs(books) do
+        local bookName = k
+        local bookSize = tonumber(v["size"]) / 1024 / 1024
+        if i == len then ifShow = true end
         if i == index then
             eink.rect(0, 16 * i, 200, 16 * (i + 1), 0, 1, nil, ifShow)
-            einkShowStr(0, 16 * (i + 1), books[i], 1,
+            einkShowStr(0, 16 * (i + 1), bookName .. "      " ..
+                            string.format("%.2f", bookSize) .. "MB", 1,
                         eink.font_opposansm12_chinese, nil, ifShow)
         else
-            einkShowStr(0, 16 * (i + 1), books[i], 0,
+            einkShowStr(0, 16 * (i + 1), bookName .. "      " ..
+                            string.format("%.2f", bookSize) .. "MB", 0,
                         eink.font_opposansm12_chinese, nil, ifShow)
         end
+        i = i + 1
     end
 end
 
-function showBook(bookUrl, page)
+function showBook(bookName, bookUrl, page)
     sys.taskInit(function()
         while true do
             local result, code, data = httpLib.request("GET",
                                                        bookUrl .. "/" .. page)
-            log.info("SHOWBOOK", result, code, data)
-            if result == false then
+            log.info("SHOWBOOK", result, code)
+            if result == false or code == -1 or code == 0 then
                 log.error("SHOWBOOK", "获取图书内容失败 ", data)
-                sys.wait(100)
             else
                 local bookLines = json.decode(data)
-                -- printTable(bookLines)
                 for k, v in pairs(bookLines) do
                     if k == 1 then
                         einkShowStr(0, 16 * k, v, 0,
                                     eink.font_opposansm12_chinese, true, false)
                     elseif k == #bookLines then
                         einkShowStr(0, 16 * k, v, 0,
-                                    eink.font_opposansm12_chinese, false, true)
+                                    eink.font_opposansm12_chinese, false, false)
                     else
                         einkShowStr(0, 16 * k, v, 0,
                                     eink.font_opposansm12_chinese, false, false)
                     end
                 end
+                einkShowStr(60, 16 * 12 + 2,
+                            page .. "/" .. einkBooksTable[bookName]["pages"], 0,
+                            eink.font_opposansm12_chinese, false, true)
                 break
             end
         end
@@ -117,7 +135,7 @@ end
 
 function btnShortHandle()
     if PAGE == "LIST" then
-        if einkBooksIndex == #einkBooksTable then
+        if einkBooksIndex == einkBooksTableLen then
             einkBooksIndex = 1
         else
             einkBooksIndex = einkBooksIndex + 1
@@ -125,8 +143,15 @@ function btnShortHandle()
         showBookList(einkBooksTable, einkBooksIndex)
     else
         page = page + 1
-        showBook("http://192.168.31.70:2333/" ..
-                     string.urlEncode(einkBooksTable[einkBooksIndex]), page)
+        local i = 1
+        local bookName = nil
+        for k, v in pairs(einkBooksTable) do
+            if i == einkBooksIndex then bookName = k end
+            i = i + 1
+        end
+        showBook(bookName,
+                 "http://192.168.31.70:2333/" .. string.urlEncode(bookName),
+                 page)
     end
     waitDoubleClick = false
 end
@@ -134,11 +159,14 @@ end
 function btnLongHandle()
     if PAGE == "LIST" then
         PAGE = "BOOK"
-        log.info("当前书", einkBooksTable[einkBooksIndex])
-        log.info("当前书URLENCODE",
-                 string.urlEncode(einkBooksTable[einkBooksIndex]))
-        showBook("http://192.168.31.70:2333/" ..
-                     string.urlEncode(einkBooksTable[einkBooksIndex]), 1)
+        local i = 1
+        local bookName = nil
+        for k, v in pairs(einkBooksTable) do
+            if i == einkBooksIndex then bookName = k end
+            i = i + 1
+        end
+        showBook(bookName,
+                 "http://192.168.31.70:2333/" .. string.urlEncode(bookName), 1)
     elseif PAGE == "BOOK" then
         PAGE = "LIST"
         page = 1
@@ -149,7 +177,7 @@ end
 function btnDoublehandle()
     if PAGE == "LIST" then
         if einkBooksIndex == 1 then
-            einkBooksIndex = #einkBooksTable
+            einkBooksIndex = einkBooksTableLen
         else
             einkBooksIndex = einkBooksIndex - 1
         end
@@ -157,15 +185,20 @@ function btnDoublehandle()
     else
         if page == 1 then return end
         page = page - 1
-        showBook("http://192.168.31.70:2333/" ..
-                     string.urlEncode(einkBooksTable[einkBooksIndex]), page)
+        local i = 1
+        local bookName = nil
+        for k, v in pairs(einkBooksTable) do
+            if i == einkBooksIndex then bookName = k end
+            i = i + 1
+        end
+        showBook(bookName,
+                 "http://192.168.31.70:2333/" .. string.urlEncode(bookName),
+                 page)
     end
 end
 
 function einkShowStr(x, y, str, colored, font, clear, show)
     if clear == true then eink.clear() end
-    -- eink.print(0, 12, PROJECT, 0, eink.font_opposansm12)
-    -- eink.print(0, 20, "联网成功", 0, eink.font_opposansm12_chinese)
     eink.print(x, y, str, colored, font)
     if show == true then eink.show(0, 0, true) end
 end
@@ -173,24 +206,40 @@ end
 function einkBook()
     eink.model(eink.MODEL_1in54)
     if MOD_TYPE == "air101" then
-        eink.setup(0, 0, 16, 19, 17, 20)
+        eink.setup(1, 0, 16, 19, 17, 20)
     elseif MOD_TYPE == "ESP32C3" then
-        eink.setup(0, 2, 11, 10, 6, 7)
+        eink.setup(1, 2, 11, 10, 6, 7)
     end
     local width, height, rotate = 200, 200, 0
     eink.setWin(width, height, rotate)
-    wifiConnect.connect("Xiaomi_AX6000", "Air123456")
-    local result, code, data = httpLib.request("GET",
-                                               "http://192.168.31.70:2333/getBooks")
-    if result == false then
-        log.error(tag, "获取图书列表失败 ", data)
-    else
-        einkBooksTable = json.decode(data)
-        showBookList(einkBooksTable, 1)
+    local connectRes = wifiConnect.connect("Xiaomi_AX6000", "Air123456")
+    if connectRes == false then
+        einkShowStr(0, 16, "联网失败", 0, eink.font_opposansm12_chinese,
+                    true, true)
+        rtos.reboot()
     end
-end
 
-btnSetup(9, 1000, btnShortHandle, btnLongHandle, btnDoublehandle)
+    for i = 1, 5 do
+        local result, code, data = httpLib.request("GET",
+                                                   "http://192.168.31.70:2333/getBooks")
+        if result == false or code == -1 then
+            log.error(tag, "获取图书列表失败 ", data)
+            if i == 5 then
+                einkShowStr(0, 16, "连接图书服务器失败 正在重启",
+                            0, eink.font_opposansm12_chinese, true, true)
+                rtos.reboot()
+            end
+        else
+            einkBooksTable = json.decode(data)
+            printTable(einkBooksTable)
+            einkBooksTableLen = getTableLen(einkBooksTable)
+            showBookList(einkBooksTable, 1)
+            btnSetup(9, 1000, btnShortHandle, btnLongHandle, btnDoublehandle)
+            break
+        end
+    end
+
+end
 
 sys.taskInit(einkBook)
 
