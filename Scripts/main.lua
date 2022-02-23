@@ -6,6 +6,8 @@ sys = require("sys")
 wifiConnect = require("wifiConnect")
 httpLib = require("httpLib")
 
+local tag = "EINKBOOK"
+
 function printTable(tbl, lv)
     lv = lv and lv .. "\t" or ""
     print(lv .. "{")
@@ -32,6 +34,7 @@ function getTableLen(t)
     return count
 end
 
+local einkPrintTime = 0
 local PAGE, page = "LIST", 1
 local einkBooksTable, einkBooksIndex, einkBooksTableLen = {}, 1, 0
 local gBTN, gPressTime, gShortCb, gLongCb, gDoubleCb, gBtnStatus = 0, 1000, nil,
@@ -198,9 +201,21 @@ function btnDoublehandle()
 end
 
 function einkShowStr(x, y, str, colored, font, clear, show)
+    if einkPrintTime == 10 then
+        einkPrintTime = 0
+        eink.clear()
+        eink.rect(0, 0, 200, 200, 0, 1)
+        eink.show(0, 0, true)
+        eink.clear()
+        eink.rect(0, 0, 200, 200, 1, 1)
+        eink.show(0, 0, true)
+    end
     if clear == true then eink.clear() end
     eink.print(x, y, str, colored, font)
-    if show == true then eink.show(0, 0, true) end
+    if show == true then
+        einkPrintTime = einkPrintTime + 1
+        eink.show(0, 0, true)
+    end
 end
 
 function einkBook()
@@ -212,6 +227,14 @@ function einkBook()
     end
     local width, height, rotate = 200, 200, 0
     eink.setWin(width, height, rotate)
+    eink.clear()
+    eink.rect(0, 0, 200, 200, 0, 1)
+    eink.show(0, 0, true)
+    eink.clear()
+    eink.rect(0, 0, 200, 200, 1, 1)
+    einkShowStr(0, 16, "开机中...", 0, eink.font_opposansm12_chinese, false,
+                false)
+    eink.show(0, 0, true)
     local connectRes = wifiConnect.connect("Xiaomi_AX6000", "Air123456")
     if connectRes == false then
         einkShowStr(0, 16, "联网失败", 0, eink.font_opposansm12_chinese,
@@ -222,7 +245,7 @@ function einkBook()
     for i = 1, 5 do
         local result, code, data = httpLib.request("GET",
                                                    "http://192.168.31.70:2333/getBooks")
-        if result == false or code == -1 then
+        if result == false or code == -1 or code == 0 then
             log.error(tag, "获取图书列表失败 ", data)
             if i == 5 then
                 einkShowStr(0, 16, "连接图书服务器失败 正在重启",
