@@ -47,6 +47,7 @@ func main() {
 			if err != nil || io.EOF == err {
 				break
 			}
+			line = strings.Trim(line, " ")
 			line = strings.ReplaceAll(line, "，", ",")
 			line = strings.ReplaceAll(line, "。", ".")
 			line = strings.ReplaceAll(line, "“", "\"")
@@ -59,19 +60,41 @@ func main() {
 			line = strings.ReplaceAll(line, "……", "...")
 			line = strings.ReplaceAll(line, "（", "(")
 			line = strings.ReplaceAll(line, "）", ")")
-			lines = append(lines, line)
+			if line != "" {
+				lines = append(lines, line)
+			}
 		}
 		for _, line := range lines {
 			runeLine := []rune(line)
-			len := len(runeLine)
-			if len <= 12 {
-				showList = append(showList, string(runeLine))
+			runeLineLen := len(runeLine)
+			line = strings.ReplaceAll(line, ",", " ,  ")
+			line = strings.ReplaceAll(line, ".", " .  ")
+			line = strings.ReplaceAll(line, "?", " ?  ")
+			line = strings.ReplaceAll(line, "!", " !  ")
+			line = strings.ReplaceAll(line, ":", " :  ")
+			line = strings.ReplaceAll(line, "...", " ...  ")
+			if runeLineLen <= 12 {
+				showList = append(showList, line)
 			} else {
-				num := len / 12
+				num := runeLineLen / 12
 				for i := 0; i < num; i++ {
-					showList = append(showList, string(runeLine[12*i:12*i+12]))
+					line = string(runeLine[12*i : 12*i+12])
+					line = strings.ReplaceAll(line, ",", " ,  ")
+					line = strings.ReplaceAll(line, ".", " .  ")
+					line = strings.ReplaceAll(line, "?", " ?  ")
+					line = strings.ReplaceAll(line, "!", " !  ")
+					line = strings.ReplaceAll(line, ":", " :  ")
+					line = strings.ReplaceAll(line, "...", " ...  ")
+					showList = append(showList, line)
 				}
-				showList = append(showList, string(runeLine[12*num:len]))
+				line = string(runeLine[12*num : runeLineLen])
+				line = strings.ReplaceAll(line, ",", " ,  ")
+				line = strings.ReplaceAll(line, ".", " .  ")
+				line = strings.ReplaceAll(line, "?", " ?  ")
+				line = strings.ReplaceAll(line, "!", " !  ")
+				line = strings.ReplaceAll(line, ":", " :  ")
+				line = strings.ReplaceAll(line, "...", " ...  ")
+				showList = append(showList, line)
 			}
 		}
 		booksData[name] = showList
