@@ -7,6 +7,7 @@ wifiConnect = require("wifiConnect")
 httpLib = require("httpLib")
 
 local tag = "EINKBOOK"
+local serverAdress = "http://47.96.229.157:2333/"
 
 function printTable(tbl, lv)
     lv = lv and lv .. "\t" or ""
@@ -35,7 +36,7 @@ function getTableLen(t)
 end
 
 local einkPrintTime = 0
-local PAGE, page = "LIST", 1
+local PAGE, gpage = "LIST", 1
 local einkBooksTable, einkBooksIndex, einkBooksTableLen = {}, 1, 0
 local gBTN, gPressTime, gShortCb, gLongCb, gDoubleCb, gBtnStatus = 0, 1000, nil,
                                                                    nil, nil,
@@ -107,7 +108,7 @@ end
 
 function showBook(bookName, bookUrl, page)
     sys.taskInit(function()
-        while true do
+        for i = 1, 3 do
             local result, code, data = httpLib.request("GET",
                                                        bookUrl .. "/" .. page)
             log.info("SHOWBOOK", result, code)
@@ -130,6 +131,7 @@ function showBook(bookName, bookUrl, page)
                 einkShowStr(60, 16 * 12 + 2,
                             page .. "/" .. einkBooksTable[bookName]["pages"], 0,
                             eink.font_opposansm12_chinese, false, true)
+                gpage = gpage + 1
                 break
             end
         end
@@ -145,16 +147,13 @@ function btnShortHandle()
         end
         showBookList(einkBooksTable, einkBooksIndex)
     else
-        page = page + 1
         local i = 1
         local bookName = nil
         for k, v in pairs(einkBooksTable) do
             if i == einkBooksIndex then bookName = k end
             i = i + 1
         end
-        showBook(bookName,
-                 "http://192.168.31.70:2333/" .. string.urlEncode(bookName),
-                 page)
+        showBook(bookName, serverAdress .. string.urlEncode(bookName), gpage)
     end
     waitDoubleClick = false
 end
@@ -168,8 +167,7 @@ function btnLongHandle()
             if i == einkBooksIndex then bookName = k end
             i = i + 1
         end
-        showBook(bookName,
-                 "http://192.168.31.70:2333/" .. string.urlEncode(bookName), 1)
+        showBook(bookName, serverAdress .. string.urlEncode(bookName), 1)
     elseif PAGE == "BOOK" then
         PAGE = "LIST"
         page = 1
@@ -194,9 +192,7 @@ function btnDoublehandle()
             if i == einkBooksIndex then bookName = k end
             i = i + 1
         end
-        showBook(bookName,
-                 "http://192.168.31.70:2333/" .. string.urlEncode(bookName),
-                 page)
+        showBook(bookName, serverAdress .. string.urlEncode(bookName), page)
     end
 end
 
@@ -244,7 +240,7 @@ function einkBook()
 
     for i = 1, 5 do
         local result, code, data = httpLib.request("GET",
-                                                   "http://192.168.31.70:2333/getBooks")
+                                                   serverAdress .. "/getBooks")
         if result == false or code == -1 or code == 0 then
             log.error(tag, "获取图书列表失败 ", data)
             if i == 5 then

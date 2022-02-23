@@ -4,11 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"io"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
-
-	"io/ioutil"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -20,9 +19,16 @@ func errHandle(err error) {
 	}
 }
 
-func main() {
-	s := g.Server()
+func lineFormat(line string) string {
+	line = strings.ReplaceAll(line, ",", " ,  ")
+	line = strings.ReplaceAll(line, ".", " .  ")
+	line = strings.ReplaceAll(line, "?", " ?  ")
+	line = strings.ReplaceAll(line, "!", " !  ")
+	line = strings.ReplaceAll(line, ":", " :  ")
+	return line
+}
 
+func main() {
 	fileList, err := ioutil.ReadDir("./books")
 	errHandle(err)
 	files := make(map[string]map[string]string)
@@ -57,9 +63,13 @@ func main() {
 			line = strings.ReplaceAll(line, "：", ":")
 			line = strings.ReplaceAll(line, "\r", "")
 			line = strings.ReplaceAll(line, "\n", "")
+			line = strings.ReplaceAll(line, "\t", "")
+			line = strings.ReplaceAll(line, "\xe3\x80\x80", "")
 			line = strings.ReplaceAll(line, "……", "...")
 			line = strings.ReplaceAll(line, "（", "(")
 			line = strings.ReplaceAll(line, "）", ")")
+			line = strings.ReplaceAll(line, "》", ">")
+			line = strings.ReplaceAll(line, "《", "<")
 			if line != "" {
 				lines = append(lines, line)
 			}
@@ -67,34 +77,14 @@ func main() {
 		for _, line := range lines {
 			runeLine := []rune(line)
 			runeLineLen := len(runeLine)
-			line = strings.ReplaceAll(line, ",", " ,  ")
-			line = strings.ReplaceAll(line, ".", " .  ")
-			line = strings.ReplaceAll(line, "?", " ?  ")
-			line = strings.ReplaceAll(line, "!", " !  ")
-			line = strings.ReplaceAll(line, ":", " :  ")
-			line = strings.ReplaceAll(line, "...", " ...  ")
 			if runeLineLen <= 12 {
-				showList = append(showList, line)
+				showList = append(showList, lineFormat(line))
 			} else {
 				num := runeLineLen / 12
 				for i := 0; i < num; i++ {
-					line = string(runeLine[12*i : 12*i+12])
-					line = strings.ReplaceAll(line, ",", " ,  ")
-					line = strings.ReplaceAll(line, ".", " .  ")
-					line = strings.ReplaceAll(line, "?", " ?  ")
-					line = strings.ReplaceAll(line, "!", " !  ")
-					line = strings.ReplaceAll(line, ":", " :  ")
-					line = strings.ReplaceAll(line, "...", " ...  ")
-					showList = append(showList, line)
+					showList = append(showList, lineFormat(string(runeLine[12*i:12*i+12])))
 				}
-				line = string(runeLine[12*num : runeLineLen])
-				line = strings.ReplaceAll(line, ",", " ,  ")
-				line = strings.ReplaceAll(line, ".", " .  ")
-				line = strings.ReplaceAll(line, "?", " ?  ")
-				line = strings.ReplaceAll(line, "!", " !  ")
-				line = strings.ReplaceAll(line, ":", " :  ")
-				line = strings.ReplaceAll(line, "...", " ...  ")
-				showList = append(showList, line)
+				showList = append(showList, lineFormat(string(runeLine[12*num:runeLineLen])))
 			}
 		}
 		booksData[name] = showList
@@ -106,6 +96,7 @@ func main() {
 		}
 		fileInfo["pages"] = strconv.Itoa(pages)
 	}
+	s := g.Server()
 	for name := range files {
 		s.BindHandler("/"+name+"/{page}", func(r *ghttp.Request) {
 			res := strings.Split(r.Request.URL.Path, "/")
