@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"io"
@@ -115,8 +114,6 @@ func main() {
 				if startIndex+i >= len(bookData) {
 					break
 				}
-				fmt.Printf("line:%v\n", bookData[startIndex+i])
-				fmt.Printf("line:%x\n", bookData[startIndex+i])
 				list = append(list, bookData[startIndex+i])
 			}
 			encodeJson, err := json.Marshal(list)
@@ -130,5 +127,7 @@ func main() {
 		errHandle(err)
 		r.Response.Write(string(encodeJson))
 	})
+	s.SetIndexFolder(true)
+	s.SetServerRoot("./books")
 	s.Run()
 }
