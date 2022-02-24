@@ -1,12 +1,9 @@
-# TOC
-
 # EinkBook-LuatOS
 
 ### 介绍
 使用LuatOS-ESP32制作一个电纸书
 
 #### 效果展示
-<video src="./assets/EinkBook-LuatOS.mp4" controls="controls"></video>
 
 ### 硬件
 + ESP32-C3
