@@ -7,7 +7,8 @@ wifiConnect = require("wifiConnect")
 httpLib = require("httpLib")
 
 local tag = "EINKBOOK"
-local serverAdress = "http://47.96.229.157:2333/"
+-- local serverAdress = "http://47.96.229.157:2333/"
+local serverAdress = "http://192.168.31.70:2333/"
 
 function printTable(tbl, lv)
     lv = lv and lv .. "\t" or ""
@@ -170,7 +171,7 @@ function btnLongHandle()
         showBook(bookName, serverAdress .. string.urlEncode(bookName), 1)
     elseif PAGE == "BOOK" then
         PAGE = "LIST"
-        page = 1
+        gpage = 1
         showBookList(einkBooksTable, einkBooksIndex)
     end
 end
@@ -184,15 +185,15 @@ function btnDoublehandle()
         end
         showBookList(einkBooksTable, einkBooksIndex)
     else
-        if page == 1 then return end
-        page = page - 1
+        if gpage == 1 then return end
+        gpage = gpage - 1
         local i = 1
         local bookName = nil
         for k, v in pairs(einkBooksTable) do
             if i == einkBooksIndex then bookName = k end
             i = i + 1
         end
-        showBook(bookName, serverAdress .. string.urlEncode(bookName), page)
+        showBook(bookName, serverAdress .. string.urlEncode(bookName), gpage)
     end
 end
 
@@ -240,7 +241,7 @@ function einkBook()
 
     for i = 1, 5 do
         local result, code, data = httpLib.request("GET",
-                                                   serverAdress .. "/getBooks")
+                                                   serverAdress .. "getBooks")
         if result == false or code == -1 or code == 0 then
             log.error(tag, "获取图书列表失败 ", data)
             if i == 5 then

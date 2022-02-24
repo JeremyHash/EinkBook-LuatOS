@@ -45,17 +45,16 @@ function httpLib.request(method, url, head)
         local response = ""
         while 1 do
             local result, c, ret, data = sys.waitUntil("ESPHTTP_EVT", 20000)
+            -- log.info("ESPHTTP_EVT", result, c, ret, data)
             if result == false then
                 esphttp.cleanup(httpc)
                 return false, responseCode, "wait for http response timeout"
             end
-            -- log.info("httpc", result, c, ret)
             if c == httpc then
                 if esphttp.is_done(httpc, ret) then
                     esphttp.cleanup(httpc)
                     return true, esphttp.status_code(httpc), response
                 end
-                -- esphttp.status_code(httpc) == 200
                 if ret == esphttp.EVENT_ON_DATA then
                     response = response .. data
                 end

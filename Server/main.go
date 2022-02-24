@@ -3,14 +3,14 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
 	"io"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
 )
 
 func errHandle(err error) {
@@ -81,10 +81,13 @@ func main() {
 				showList = append(showList, lineFormat(line))
 			} else {
 				num := runeLineLen / 12
+				single := runeLineLen % 12
 				for i := 0; i < num; i++ {
 					showList = append(showList, lineFormat(string(runeLine[12*i:12*i+12])))
 				}
-				showList = append(showList, lineFormat(string(runeLine[12*num:runeLineLen])))
+				if single != 0 {
+					showList = append(showList, lineFormat(string(runeLine[12*num:runeLineLen])))
+				}
 			}
 		}
 		booksData[name] = showList
@@ -112,6 +115,8 @@ func main() {
 				if startIndex+i >= len(bookData) {
 					break
 				}
+				fmt.Printf("line:%v\n", bookData[startIndex+i])
+				fmt.Printf("line:%x\n", bookData[startIndex+i])
 				list = append(list, bookData[startIndex+i])
 			}
 			encodeJson, err := json.Marshal(list)
