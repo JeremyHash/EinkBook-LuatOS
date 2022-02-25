@@ -1,1 +1,1 @@
-go build -o main.exe main.go && main.exe
+go build && einkBookServer.exe
