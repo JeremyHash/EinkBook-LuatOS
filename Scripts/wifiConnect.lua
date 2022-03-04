@@ -1,10 +1,6 @@
 local wifiConnect = {}
 
-local USE_SMARTCONFIG = false
-
 function wifiConnect.connect(ssid, passwd)
-    local tag = "einkBook"
-
     local waitRes, data
     if wlan.init() ~= 0 then
         log.error(tag .. ".init", "ERROR")
@@ -20,19 +16,20 @@ function wifiConnect.connect(ssid, passwd)
             log.error(tag .. ".connect", "ERROR")
             return false
         end
-        waitRes, data = sys.waitUntil("WLAN_STA_CONNECTED", 30000)
+        waitRes, data = sys.waitUntil("WLAN_STA_CONNECTED", 180 * 10000)
         log.info("WLAN_STA_CONNECTED", waitRes, data)
         if waitRes ~= true then
             log.error(tag .. ".wlan ERROR")
             return false
         end
-        log.info("smartconfigStop", wlan.smartconfigStop())
+        -- log.info("smartconfigStop", wlan.smartconfigStop())
         waitRes, data = sys.waitUntil("IP_READY", 10000)
         if waitRes ~= true then
             log.error(tag .. ".wlan ERROR")
             return false
         end
         log.info("IP_READY", waitRes, data)
+        return true
     end
 
     if wlan.connect(ssid, passwd) ~= 0 then

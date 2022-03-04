@@ -6,9 +6,10 @@ sys = require("sys")
 wifiConnect = require("wifiConnect")
 httpLib = require("httpLib")
 
-local tag = "EINKBOOK"
--- local serverAdress = "http://47.96.229.157:2333/"
-local serverAdress = "http://192.168.31.70:2333/"
+tag = "EINKBOOK"
+USE_SMARTCONFIG = true
+serverAdress = "http://47.96.229.157:2333/"
+-- local serverAdress = "http://192.168.31.70:2333/"
 
 function printTable(tbl, lv)
     lv = lv and lv .. "\t" or ""
@@ -229,14 +230,24 @@ function einkBook()
     eink.show(0, 0, true)
     eink.clear()
     eink.rect(0, 0, 200, 200, 1, 1)
-    einkShowStr(0, 16, "开机中...", 0, eink.font_opposansm12_chinese, false,
-                false)
-    eink.show(0, 0, true)
-    local connectRes = wifiConnect.connect("Xiaomi_AX6000", "Air123456")
-    if connectRes == false then
-        einkShowStr(0, 16, "联网失败", 0, eink.font_opposansm12_chinese,
-                    true, true)
-        rtos.reboot()
+    if USE_SMARTCONFIG == true then
+        einkShowStr(0, 16, "开机中 等待配网...", 0,
+                    eink.font_opposansm12_chinese, false, true)
+        local connectRes = wifiConnect.connect()
+        if connectRes == false then
+            einkShowStr(0, 16, "配网失败 重启中...", 0,
+                        eink.font_opposansm12_chinese, true, true)
+            rtos.reboot()
+        end
+    else
+        einkShowStr(0, 16, "开机中...", 0, eink.font_opposansm12_chinese,
+                    false, true)
+        local connectRes = wifiConnect.connect("Xiaomi_AX6000", "Air123456")
+        if connectRes == false then
+            einkShowStr(0, 16, "联网失败 重启中...", 0,
+                        eink.font_opposansm12_chinese, true, true)
+            rtos.reboot()
+        end
     end
 
     for i = 1, 5 do
