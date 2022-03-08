@@ -77,12 +77,16 @@ func main() {
 			runeLine := []rune(line)
 			runeLineLen := len(runeLine)
 			if runeLineLen <= 12 {
-				showList = append(showList, lineFormat(line))
+				showList = append(showList, "  "+lineFormat(line))
 			} else {
 				num := runeLineLen / 12
 				single := runeLineLen % 12
 				for i := 0; i < num; i++ {
-					showList = append(showList, lineFormat(string(runeLine[12*i:12*i+12])))
+					if i == 0 {
+						showList = append(showList, "  "+lineFormat(string(runeLine[12*i:12*i+12])))
+					} else {
+						showList = append(showList, lineFormat(string(runeLine[12*i:12*i+12])))
+					}
 				}
 				if single != 0 {
 					showList = append(showList, lineFormat(string(runeLine[12*num:runeLineLen])))

@@ -36,12 +36,6 @@ function wifiConnect.connect(ssid, passwd)
         log.error(tag .. ".connect", "ERROR")
         return false
     end
-    waitRes, data = sys.waitUntil("WLAN_READY", 10000)
-    if waitRes ~= true then
-        log.error(tag .. ".wlan ERROR")
-        return false
-    end
-    log.info("WLAN_READY", waitRes, data)
     waitRes, data = sys.waitUntil("WLAN_STA_CONNECTED", 10000)
     if waitRes ~= true then
         log.error(tag .. ".wlan ERROR")

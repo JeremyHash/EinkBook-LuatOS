@@ -82,6 +82,7 @@ function btnSetup(gpioNumber, pressTime, shortCb, longCb, doubleCb)
 end
 
 function showBookList(books, index)
+    gpage = 1
     einkShowStr(0, 16, "图书列表", 0, eink.font_opposansm12_chinese, true)
     local ifShow = false
     local len = getTableLen(books)
@@ -133,7 +134,6 @@ function showBook(bookName, bookUrl, page)
                 einkShowStr(60, 16 * 12 + 2,
                             page .. "/" .. einkBooksTable[bookName]["pages"], 0,
                             eink.font_opposansm12_chinese, false, true)
-                gpage = gpage + 1
                 break
             end
         end
@@ -155,6 +155,7 @@ function btnShortHandle()
             if i == einkBooksIndex then bookName = k end
             i = i + 1
         end
+        gpage = gpage + 1
         showBook(bookName, serverAdress .. string.urlEncode(bookName), gpage)
     end
     waitDoubleClick = false
@@ -172,7 +173,6 @@ function btnLongHandle()
         showBook(bookName, serverAdress .. string.urlEncode(bookName), 1)
     elseif PAGE == "BOOK" then
         PAGE = "LIST"
-        gpage = 1
         showBookList(einkBooksTable, einkBooksIndex)
     end
 end
