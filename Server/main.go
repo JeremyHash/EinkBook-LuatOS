@@ -69,6 +69,7 @@ func main() {
 			line = strings.ReplaceAll(line, "）", ")")
 			line = strings.ReplaceAll(line, "》", ">")
 			line = strings.ReplaceAll(line, "《", "<")
+			line = strings.ReplaceAll(line, "—", "一")
 			if line != "" {
 				lines = append(lines, line)
 			}
