@@ -7,9 +7,16 @@ wifiConnect = require("wifiConnect")
 httpLib = require("httpLib")
 
 tag = "EINKBOOK"
-USE_SMARTCONFIG = true
+USE_SMARTCONFIG = false
 serverAdress = "http://47.96.229.157:2333/"
--- local serverAdress = "http://192.168.31.70:2333/"
+-- serverAdress = "http://192.168.31.70:2333/"
+
+waitHttpTask = false
+einkPrintTime = 0
+PAGE, gpage = "LIST", 1
+einkBooksTable, einkBooksIndex, einkBooksTableLen = {}, 1, 0
+gBTN, gPressTime, gShortCb, gLongCb, gDoubleCb, gBtnStatus = 0, 1000, nil, nil,
+                                                             nil, "IDLE"
 
 function printTable(tbl, lv)
     lv = lv and lv .. "\t" or ""
@@ -37,19 +44,12 @@ function getTableLen(t)
     return count
 end
 
-local einkPrintTime = 0
-local PAGE, gpage = "LIST", 1
-local einkBooksTable, einkBooksIndex, einkBooksTableLen = {}, 1, 0
-local gBTN, gPressTime, gShortCb, gLongCb, gDoubleCb, gBtnStatus = 0, 1000, nil,
-                                                                   nil, nil,
-                                                                   "IDLE"
-
 function longTimerCb()
     gBtnStatus = "LONGPRESSED"
     gLongCb()
 end
 
-local waitDoubleClick = false
+waitDoubleClick = false
 
 function btnHandle(val)
     if val == 0 then
@@ -111,6 +111,7 @@ end
 
 function showBook(bookName, bookUrl, page)
     sys.taskInit(function()
+        waitHttpTask = true
         for i = 1, 3 do
             local result, code, data = httpLib.request("GET",
                                                        bookUrl .. "/" .. page)
@@ -137,10 +138,15 @@ function showBook(bookName, bookUrl, page)
                 break
             end
         end
+        waitHttpTask = false
     end)
 end
 
 function btnShortHandle()
+    if waitHttpTask == true then
+        waitDoubleClick = false
+        return
+    end
     if PAGE == "LIST" then
         if einkBooksIndex == einkBooksTableLen then
             einkBooksIndex = 1
@@ -155,6 +161,11 @@ function btnShortHandle()
             if i == einkBooksIndex then bookName = k end
             i = i + 1
         end
+        local thisBookPages = tonumber(einkBooksTable[bookName]["pages"])
+        if thisBookPages == gpage then
+            waitDoubleClick = false
+            return
+        end
         gpage = gpage + 1
         showBook(bookName, serverAdress .. string.urlEncode(bookName), gpage)
     end
@@ -162,6 +173,7 @@ function btnShortHandle()
 end
 
 function btnLongHandle()
+    if waitHttpTask == true then return end
     if PAGE == "LIST" then
         PAGE = "BOOK"
         local i = 1
@@ -178,6 +190,7 @@ function btnLongHandle()
 end
 
 function btnDoublehandle()
+    if waitHttpTask == true then return end
     if PAGE == "LIST" then
         if einkBooksIndex == 1 then
             einkBooksIndex = einkBooksTableLen
