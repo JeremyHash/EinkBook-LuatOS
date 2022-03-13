@@ -93,17 +93,17 @@ function showBookList(books, index)
     end
     local i = 1
     for k, v in pairs(books) do
-        local bookName = k
+        local bookName = string.split(k, ".")[1]
         local bookSize = tonumber(v["size"]) / 1024 / 1024
         if i == len then
             ifShow = true
         end
         if i == index then
             eink.rect(0, 16 * i, 200, 16 * (i + 1), 0, 1, nil, ifShow)
-            einkShowStr(0, 16 * (i + 1), bookName .. "      " .. string.format("%.2f", bookSize) .. "MB", 1,
+            einkShowStr(0, 16 * (i + 1), bookName .. "          " .. string.format("%.2f", bookSize) .. "MB", 1,
                 eink.font_opposansm12_chinese, nil, ifShow)
         else
-            einkShowStr(0, 16 * (i + 1), bookName .. "      " .. string.format("%.2f", bookSize) .. "MB", 0,
+            einkShowStr(0, 16 * (i + 1), bookName .. "          " .. string.format("%.2f", bookSize) .. "MB", 0,
                 eink.font_opposansm12_chinese, nil, ifShow)
         end
         i = i + 1
