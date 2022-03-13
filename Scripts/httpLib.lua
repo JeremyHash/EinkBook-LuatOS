@@ -37,9 +37,10 @@ function httpLib.request(method, url, head)
         return false, responseCode, "create httpClient error"
     end
     if head ~= nil then
-        for k, v in pairs(head) do esphttp.set_header(httpc, k, v) end
+        for k, v in pairs(head) do
+            esphttp.set_header(httpc, k, v)
+        end
     end
-
     local ok, err = esphttp.perform(httpc, true)
     if ok then
         local response = ""

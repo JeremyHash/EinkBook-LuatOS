@@ -22,7 +22,6 @@ function wifiConnect.connect(ssid, passwd)
             log.error(tag .. ".wlan ERROR")
             return false
         end
-        -- log.info("smartconfigStop", wlan.smartconfigStop())
         waitRes, data = sys.waitUntil("IP_READY", 10000)
         if waitRes ~= true then
             log.error(tag .. ".wlan ERROR")

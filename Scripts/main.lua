@@ -88,7 +88,7 @@ function showBookList(books, index)
     local ifShow = false
     local len = getTableLen(books)
     if len == 0 then
-        -- TODO 显示无图书
+        einkShowStr(0, 32, "暂无在线图书", 0, eink.font_opposansm12_chinese, false, true)
         return
     end
     local i = 1
@@ -222,10 +222,8 @@ end
 function einkShowStr(x, y, str, colored, font, clear, show)
     if einkPrintTime == 10 then
         einkPrintTime = 0
-        eink.clear()
         eink.rect(0, 0, 200, 200, 0, 1)
         eink.show(0, 0, true)
-        eink.clear()
         eink.rect(0, 0, 200, 200, 1, 1)
         eink.show(0, 0, true)
     end
@@ -247,10 +245,8 @@ sys.taskInit(function()
         eink.setup(1, 2, 11, 10, 6, 7)
     end
     eink.setWin(200, 200, 0)
-    eink.clear()
     eink.rect(0, 0, 200, 200, 0, 1)
-    eink.show(0, 0, true)
-    eink.clear()
+    eink.show(0, 0)
     eink.rect(0, 0, 200, 200, 1, 1)
     if USE_SMARTCONFIG == true then
         einkShowStr(0, 16, "开机中 等待配网...", 0, eink.font_opposansm12_chinese, false, true)
@@ -261,13 +257,12 @@ sys.taskInit(function()
         end
     else
         einkShowStr(0, 16, "开机中...", 0, eink.font_opposansm12_chinese, false, true)
-        local connectRes = wifiLib.connect("Xiaomi_AX6000", "Air123456")
+        local connectRes = wifiLib.connect("XXXXXX", "XXXXXXXX")
         if connectRes == false then
             einkShowStr(0, 16, "联网失败 重启中...", 0, eink.font_opposansm12_chinese, true, true)
             rtos.reboot()
         end
     end
-
     for i = 1, 5 do
         local result, code, data = httpLib.request("GET", serverAdress .. "getBooks")
         if result == false or code == -1 or code == 0 then
@@ -287,8 +282,6 @@ sys.taskInit(function()
         end
         sys.wait(1000)
     end
-
 end)
 
 sys.run()
-
