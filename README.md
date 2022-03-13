@@ -4,9 +4,10 @@
 使用LuatOS-ESP32制作一个电纸书
 
 #### 效果展示
+![](https://cdn.openluat-luatcommunity.openluat.com/images/20220313202435046_IMG_20220310_154336.jpg)
 
 ### 硬件
-+ ESP32-C3
++ 合宙ESP32-C3开发板
 + MODEL_1in54 墨水屏
 
 ### 软件
@@ -16,9 +17,14 @@
 ### 部署方法
 
 #### 服务端
-开启小说服务端程序
++ 将想要阅读的小说放到`Server\books`目录下（目前仅支持txt格式）
++ 开启小说服务端程序
 ```bat
-./run.bat
+cd Server
+windows:
+    ./run.bat
+linux or macos:
+    ./run.sh
 ```
 
 #### 电纸书
