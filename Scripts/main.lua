@@ -14,7 +14,7 @@ serverAdress = "http://47.96.229.157:2333/"
 waitHttpTask, waitDoubleClick = false, false
 einkPrintTime = 0
 PAGE, gpage = "LIST", 1
-einkBooksTable, einkBooksIndex, einkBooksTableLen = {}, 1, 0
+onlineBooksTable, onlineBooksShowTable, onlineBooksShowTableTmp, einkBooksIndex, onlineBooksTableLen = {}, {}, {}, 1, 0
 gBTN, gPressTime, gShortCb, gLongCb, gDoubleCb, gBtnStatus = 0, 1000, nil, nil, nil, "IDLE"
 
 function printTable(tbl, lv)
@@ -39,12 +39,33 @@ function printTable(tbl, lv)
     print(lv .. "},")
 end
 
+function getTableSlice(intable, startIndex, endIndex)
+    local outTable = {}
+    for i = startIndex, endIndex do
+        table.insert(outTable, intable[i])
+    end
+    return outTable
+end
+
 function getTableLen(t)
     local count = 0
     for _, _ in pairs(t) do
         count = count + 1
     end
     return count
+end
+
+function formatOnlineBooksTable(inTable)
+    local outTable = {}
+    local i = 1
+    for k, v in pairs(inTable) do
+        v["index"] = i
+        table.insert(outTable, {
+            [k] = v
+        })
+        i = i + 1
+    end
+    return outTable
 end
 
 function longTimerCb()
@@ -82,31 +103,44 @@ function btnSetup(gpioNumber, pressTime, shortCb, longCb, doubleCb)
     gDoubleCb = doubleCb
 end
 
-function showBookList(books, index)
+function showBookList(index)
+    local firstIndex
+    for k, v in pairs(onlineBooksShowTableTmp[1]) do
+        firstIndex = v["index"]
+    end
+    if index > firstIndex + 10 then
+        onlineBooksShowTableTmp = getTableSlice(onlineBooksShowTable, index - 10, index)
+    end
+    if index < firstIndex then
+        onlineBooksShowTableTmp = getTableSlice(onlineBooksShowTable, index, index + 10)
+    end
     gpage = 1
     einkShowStr(0, 16, "图书列表", 0, eink.font_opposansm12_chinese, true)
     local ifShow = false
-    local len = getTableLen(books)
+    local len = getTableLen(onlineBooksTable)
+    local showLen = getTableLen(onlineBooksShowTableTmp)
     if len == 0 then
         einkShowStr(0, 32, "暂无在线图书", 0, eink.font_opposansm12_chinese, false, true)
         return
     end
     local i = 1
-    for k, v in pairs(books) do
-        local bookName = string.split(k, ".")[1]
-        local bookSize = tonumber(v["size"]) / 1024 / 1024
-        if i == len then
-            ifShow = true
+    for k, v in pairs(onlineBooksShowTableTmp) do
+        for name, info in pairs(v) do
+            local bookName = string.split(name, ".")[1]
+            local bookSize = tonumber(info["size"]) / 1024 / 1024
+            if i == showLen then
+                ifShow = true
+            end
+            if info["index"] == index then
+                eink.rect(0, 16 * i, 200, 16 * (i + 1), 0, 1, nil, ifShow)
+                einkShowStr(0, 16 * (i + 1), bookName .. "          " .. string.format("%.2f", bookSize) .. "MB", 1,
+                    eink.font_opposansm12_chinese, nil, ifShow)
+            else
+                einkShowStr(0, 16 * (i + 1), bookName .. "          " .. string.format("%.2f", bookSize) .. "MB", 0,
+                    eink.font_opposansm12_chinese, nil, ifShow)
+            end
+            i = i + 1
         end
-        if i == index then
-            eink.rect(0, 16 * i, 200, 16 * (i + 1), 0, 1, nil, ifShow)
-            einkShowStr(0, 16 * (i + 1), bookName .. "          " .. string.format("%.2f", bookSize) .. "MB", 1,
-                eink.font_opposansm12_chinese, nil, ifShow)
-        else
-            einkShowStr(0, 16 * (i + 1), bookName .. "          " .. string.format("%.2f", bookSize) .. "MB", 0,
-                eink.font_opposansm12_chinese, nil, ifShow)
-        end
-        i = i + 1
     end
 end
 
@@ -129,7 +163,7 @@ function showBook(bookName, bookUrl, page)
                         einkShowStr(0, 16 * k, v, 0, eink.font_opposansm12_chinese, false, false)
                     end
                 end
-                einkShowStr(60, 16 * 12 + 2, page .. "/" .. einkBooksTable[bookName]["pages"], 0,
+                einkShowStr(60, 16 * 12 + 2, page .. "/" .. onlineBooksTable[bookName]["pages"], 0,
                     eink.font_opposansm12_chinese, false, true)
                 break
             end
@@ -144,22 +178,22 @@ function btnShortHandle()
         return
     end
     if PAGE == "LIST" then
-        if einkBooksIndex == einkBooksTableLen then
+        if einkBooksIndex == onlineBooksTableLen then
             einkBooksIndex = 1
         else
             einkBooksIndex = einkBooksIndex + 1
         end
-        showBookList(einkBooksTable, einkBooksIndex)
+        showBookList(einkBooksIndex)
     else
         local i = 1
         local bookName = nil
-        for k, v in pairs(einkBooksTable) do
+        for k, v in pairs(onlineBooksTable) do
             if i == einkBooksIndex then
                 bookName = k
             end
             i = i + 1
         end
-        local thisBookPages = tonumber(einkBooksTable[bookName]["pages"])
+        local thisBookPages = tonumber(onlineBooksTable[bookName]["pages"])
         if thisBookPages == gpage then
             waitDoubleClick = false
             return
@@ -178,7 +212,7 @@ function btnLongHandle()
         PAGE = "BOOK"
         local i = 1
         local bookName = nil
-        for k, v in pairs(einkBooksTable) do
+        for k, v in pairs(onlineBooksTable) do
             if i == einkBooksIndex then
                 bookName = k
             end
@@ -187,7 +221,7 @@ function btnLongHandle()
         showBook(bookName, serverAdress .. string.urlEncode(bookName), 1)
     elseif PAGE == "BOOK" then
         PAGE = "LIST"
-        showBookList(einkBooksTable, einkBooksIndex)
+        showBookList(einkBooksIndex)
     end
 end
 
@@ -197,11 +231,11 @@ function btnDoublehandle()
     end
     if PAGE == "LIST" then
         if einkBooksIndex == 1 then
-            einkBooksIndex = einkBooksTableLen
+            einkBooksIndex = onlineBooksTableLen
         else
             einkBooksIndex = einkBooksIndex - 1
         end
-        showBookList(einkBooksTable, einkBooksIndex)
+        showBookList(einkBooksIndex)
     else
         if gpage == 1 then
             return
@@ -209,7 +243,7 @@ function btnDoublehandle()
         gpage = gpage - 1
         local i = 1
         local bookName = nil
-        for k, v in pairs(einkBooksTable) do
+        for k, v in pairs(onlineBooksTable) do
             if i == einkBooksIndex then
                 bookName = k
             end
@@ -220,7 +254,7 @@ function btnDoublehandle()
 end
 
 function einkShowStr(x, y, str, colored, font, clear, show)
-    if einkPrintTime == 10 then
+    if einkPrintTime > 20 then
         einkPrintTime = 0
         eink.rect(0, 0, 200, 200, 0, 1)
         eink.show(0, 0, true)
@@ -273,10 +307,12 @@ sys.taskInit(function()
                 rtos.reboot()
             end
         else
-            einkBooksTable = json.decode(data)
-            printTable(einkBooksTable)
-            einkBooksTableLen = getTableLen(einkBooksTable)
-            showBookList(einkBooksTable, 1)
+            onlineBooksTable = json.decode(data)
+            printTable(onlineBooksTable)
+            onlineBooksTableLen = getTableLen(onlineBooksTable)
+            onlineBooksShowTable = formatOnlineBooksTable(onlineBooksTable)
+            onlineBooksShowTableTmp = getTableSlice(onlineBooksShowTable, 1, 11)
+            showBookList(1)
             btnSetup(9, 1000, btnShortHandle, btnLongHandle, btnDoublehandle)
             break
         end
