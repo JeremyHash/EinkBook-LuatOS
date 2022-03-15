@@ -114,7 +114,6 @@ function showBookList(index)
     if index < firstIndex then
         onlineBooksShowTableTmp = getTableSlice(onlineBooksShowTable, index, index + 10)
     end
-    gpage = 1
     einkShowStr(0, 16, "图书列表", 0, eink.font_opposansm12_chinese, true)
     local ifShow = false
     local len = getTableLen(onlineBooksTable)
@@ -200,6 +199,8 @@ function btnShortHandle()
         end
         gpage = gpage + 1
         showBook(bookName, serverAdress .. string.urlEncode(bookName), gpage)
+        log.info(bookName, gpage)
+        fdb.kv_set(bookName, gpage)
     end
     waitDoubleClick = false
 end
@@ -218,7 +219,15 @@ function btnLongHandle()
             end
             i = i + 1
         end
-        showBook(bookName, serverAdress .. string.urlEncode(bookName), 1)
+        local pageCache = fdb.kv_get(bookName)
+        log.info(bookName, pageCache)
+        if pageCache == nil then
+            showBook(bookName, serverAdress .. string.urlEncode(bookName), 1)
+        else
+            gpage = pageCache
+            showBook(bookName, serverAdress .. string.urlEncode(bookName), pageCache)
+        end
+
     elseif PAGE == "BOOK" then
         PAGE = "LIST"
         showBookList(einkBooksIndex)
@@ -249,6 +258,8 @@ function btnDoublehandle()
             end
             i = i + 1
         end
+        log.info(bookName, gpage)
+        fdb.kv_set(bookName, gpage)
         showBook(bookName, serverAdress .. string.urlEncode(bookName), gpage)
     end
 end
@@ -272,6 +283,7 @@ function einkShowStr(x, y, str, colored, font, clear, show)
 end
 
 sys.taskInit(function()
+    assert(fdb.kvdb_init("env", "onchip_flash") == true, tag .. ".kvdb_init ERROR")
     eink.model(eink.MODEL_1in54)
     if MOD_TYPE == "air101" then
         eink.setup(1, 0, 16, 19, 17, 20)
@@ -291,7 +303,7 @@ sys.taskInit(function()
         end
     else
         einkShowStr(0, 16, "开机中...", 0, eink.font_opposansm12_chinese, false, true)
-        local connectRes = wifiLib.connect("XXXXXX", "XXXXXXXX")
+        local connectRes = wifiLib.connect("Xiaomi_AX6000", "Air123456")
         if connectRes == false then
             einkShowStr(0, 16, "联网失败 重启中...", 0, eink.font_opposansm12_chinese, true, true)
             rtos.reboot()
