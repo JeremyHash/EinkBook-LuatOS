@@ -9,7 +9,6 @@ httpLib = require("httpLib")
 tag = "EINKBOOK"
 USE_SMARTCONFIG = false
 serverAdress = "http://47.96.229.157:2333/"
--- serverAdress = "http://192.168.31.70:2333/"
 
 waitHttpTask, waitDoubleClick = false, false
 einkPrintTime = 0
@@ -114,12 +113,12 @@ function showBookList(index)
     if index < firstIndex then
         onlineBooksShowTableTmp = getTableSlice(onlineBooksShowTable, index, index + 10)
     end
-    einkShowStr(0, 16, "图书列表", 0, eink.font_opposansm12_chinese, true)
+    einkShowStr(0, 16, "图书列表", 0, true)
     local ifShow = false
     local len = getTableLen(onlineBooksTable)
     local showLen = getTableLen(onlineBooksShowTableTmp)
     if len == 0 then
-        einkShowStr(0, 32, "暂无在线图书", 0, eink.font_opposansm12_chinese, false, true)
+        einkShowStr(0, 32, "暂无在线图书", 0, false, true)
         return
     end
     local i = 1
@@ -133,10 +132,10 @@ function showBookList(index)
             if info["index"] == index then
                 eink.rect(0, 16 * i, 200, 16 * (i + 1), 0, 1, nil, ifShow)
                 einkShowStr(0, 16 * (i + 1), bookName .. "          " .. string.format("%.2f", bookSize) .. "MB", 1,
-                    eink.font_opposansm12_chinese, nil, ifShow)
+                    nil, ifShow)
             else
                 einkShowStr(0, 16 * (i + 1), bookName .. "          " .. string.format("%.2f", bookSize) .. "MB", 0,
-                    eink.font_opposansm12_chinese, nil, ifShow)
+                    nil, ifShow)
             end
             i = i + 1
         end
@@ -155,15 +154,14 @@ function showBook(bookName, bookUrl, page)
                 local bookLines = json.decode(data)
                 for k, v in pairs(bookLines) do
                     if k == 1 then
-                        einkShowStr(0, 16 * k, v, 0, eink.font_opposansm12_chinese, true, false)
+                        einkShowStr(0, 16 * k, v, 0, true, false)
                     elseif k == #bookLines then
-                        einkShowStr(0, 16 * k, v, 0, eink.font_opposansm12_chinese, false, false)
+                        einkShowStr(0, 16 * k, v, 0, false, false)
                     else
-                        einkShowStr(0, 16 * k, v, 0, eink.font_opposansm12_chinese, false, false)
+                        einkShowStr(0, 16 * k, v, 0, false, false)
                     end
                 end
-                einkShowStr(60, 16 * 12 + 2, page .. "/" .. onlineBooksTable[bookName]["pages"], 0,
-                    eink.font_opposansm12_chinese, false, true)
+                einkShowStr(60, 16 * 12 + 2, page .. "/" .. onlineBooksTable[bookName]["pages"], 0, false, true)
                 break
             end
         end
@@ -264,7 +262,7 @@ function btnDoublehandle()
     end
 end
 
-function einkShowStr(x, y, str, colored, font, clear, show)
+function einkShowStr(x, y, str, colored, clear, show)
     if einkPrintTime > 20 then
         einkPrintTime = 0
         eink.rect(0, 0, 200, 200, 0, 1)
@@ -275,7 +273,7 @@ function einkShowStr(x, y, str, colored, font, clear, show)
     if clear == true then
         eink.clear()
     end
-    eink.print(x, y, str, colored, font)
+    eink.print(x, y, str, colored)
     if show == true then
         einkPrintTime = einkPrintTime + 1
         eink.show(0, 0, true)
@@ -285,27 +283,29 @@ end
 sys.taskInit(function()
     assert(fdb.kvdb_init("env", "onchip_flash") == true, tag .. ".kvdb_init ERROR")
     eink.model(eink.MODEL_1in54)
-    if MOD_TYPE == "air101" then
+    if MOD_TYPE == "AIR101" then
         eink.setup(1, 0, 16, 19, 17, 20)
     elseif MOD_TYPE == "ESP32C3" then
         eink.setup(1, 2, 11, 10, 6, 7)
     end
     eink.setWin(200, 200, 0)
-    eink.rect(0, 0, 200, 200, 0, 1)
+    eink.clear(0, true)
     eink.show(0, 0)
-    eink.rect(0, 0, 200, 200, 1, 1)
+    eink.clear(1, true)
+    eink.show(0, 0)
+    eink.setFont(eink.font_opposansm12_chinese)
     if USE_SMARTCONFIG == true then
-        einkShowStr(0, 16, "开机中 等待配网...", 0, eink.font_opposansm12_chinese, false, true)
+        einkShowStr(0, 16, "开机中 等待配网...", 0, false, true)
         local connectRes = wifiLib.connect()
         if connectRes == false then
-            einkShowStr(0, 16, "配网失败 重启中...", 0, eink.font_opposansm12_chinese, true, true)
+            einkShowStr(0, 16, "配网失败 重启中...", 0, true, true)
             rtos.reboot()
         end
     else
-        einkShowStr(0, 16, "开机中...", 0, eink.font_opposansm12_chinese, false, true)
+        einkShowStr(0, 16, "开机中...", 0, false, true)
         local connectRes = wifiLib.connect("Xiaomi_AX6000", "Air123456")
         if connectRes == false then
-            einkShowStr(0, 16, "联网失败 重启中...", 0, eink.font_opposansm12_chinese, true, true)
+            einkShowStr(0, 16, "联网失败 重启中...", 0, true, true)
             rtos.reboot()
         end
     end
@@ -314,8 +314,7 @@ sys.taskInit(function()
         if result == false or code == -1 or code == 0 then
             log.error(tag, "获取图书列表失败 ", data)
             if i == 5 then
-                einkShowStr(0, 16, "连接图书服务器失败 正在重启", 0, eink.font_opposansm12_chinese, true,
-                    true)
+                einkShowStr(0, 16, "连接图书服务器失败 正在重启", 0, true, true)
                 rtos.reboot()
             end
         else
