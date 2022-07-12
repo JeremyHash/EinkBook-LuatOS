@@ -220,7 +220,8 @@ function btnLongHandle()
         local pageCache = fdb.kv_get(bookName)
         log.info(bookName, pageCache)
         if pageCache == nil then
-            showBook(bookName, serverAdress .. string.urlEncode(bookName), 1)
+            gpage = 1
+            showBook(bookName, serverAdress .. string.urlEncode(bookName), gpage)
         else
             gpage = pageCache
             showBook(bookName, serverAdress .. string.urlEncode(bookName), pageCache)
