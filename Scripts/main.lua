@@ -7,8 +7,12 @@ wifiLib = require("wifiLib")
 httpLib = require("httpLib")
 
 tag = "EINKBOOK"
+-- 是否启用配网功能（配合esptouch使用）
 USE_SMARTCONFIG = false
+-- 这是已有的电纸书服务端地址，如果自己搭建或下面这个服务失效了，请修改
 serverAdress = "http://47.96.229.157:2333/"
+-- 改为需要连接的WiFi名称和密码（使用2.4Ghz频段，ESP32C3无法使用5GHz WiFi）
+SSID, PASSWD = "Xiaomi_AX6000", "Air123456"
 
 waitHttpTask, waitDoubleClick = false, false
 einkPrintTime = 0
@@ -304,7 +308,7 @@ sys.taskInit(function()
         end
     else
         einkShowStr(0, 16, "开机中...", 0, false, true)
-        local connectRes = wifiLib.connect("Xiaomi_AX6000", "Air123456")
+        local connectRes = wifiLib.connect(SSID, PASSWD)
         if connectRes == false then
             einkShowStr(0, 16, "联网失败 重启中...", 0, true, true)
             rtos.reboot()

@@ -11,12 +11,13 @@
 + MODEL_1in54 墨水屏
 
 ### 软件
-+ LuatOS-ESP32
-+ GoFrame
++ [LuatOS-ESP32](https://gitee.com/dreamcmi/LuatOS-ESP32/tree/master)
++ [GoFrame](https://goframe.org/display/gf)
 
 ### 部署方法
 
 #### 服务端
+> 请先自行配置Golang工具链
 + 将想要阅读的小说放到`Server\books`目录下（目前仅支持txt格式）
 + 开启小说服务端程序
 ```bat
@@ -28,6 +29,7 @@ linux or macos:
 ```
 
 #### 电纸书
+> 需要解锁ESP32C3的GPIO11，详情参考这里[ESP32C3解锁使用IO11](https://gitee.com/dreamcmi/LuatOS-ESP32/blob/master/doc/VDD_SPI_AS_GPIO.md)
 使用LuaTools将Scripts目录下所有文件烧录到ESP32-C3模块中
 
 ### 电纸书使用方法
