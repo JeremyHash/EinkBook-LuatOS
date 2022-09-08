@@ -24,8 +24,11 @@ jobs:
     - name: Build
       run: cd Server && go build
       
+    - name: PWD
+      run: pwd
+      
     - name: Collect Build Result
-      run: cp -r . output
+      run: cd .. && cp -r ./Server output
       
     - name: PWD
       run: pwd
