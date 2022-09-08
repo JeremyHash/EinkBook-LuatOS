@@ -39,7 +39,7 @@ linux or macos:
 
 > 需要解锁ESP32C3的GPIO11，详情参考这里[ESP32C3解锁使用IO11](https://gitee.com/dreamcmi/LuatOS-ESP32/blob/master/doc/VDD_SPI_AS_GPIO.md)
 
-> 注意: 需要使用带有`font_opposansm12_chinese`字体的固件，本地没有LuatOS-ESP32编译环境可以参考[云编译](https://doc.openluat.com/article/3639)
+> 注意: 需要使用带有`sarasa_regular_12`字体的固件，本地没有LuatOS-ESP32编译环境可以参考[云编译](https://wiki.luatos.com/develop/compile/Cloud_compilation.html)
 
 使用LuaTools将Scripts目录下所有文件烧录到ESP32-C3模块中
 
