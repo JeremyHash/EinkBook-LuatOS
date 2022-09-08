@@ -24,14 +24,8 @@ jobs:
     - name: Build
       run: cd Server && go build
       
-    - name: PWD
-      run: pwd
-      
     - name: Collect Build Result
-      run: cd .. && cp -r ./Server output
-      
-    - name: PWD
-      run: pwd
+      run: cp -r ./Server output
       
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3.1.0
