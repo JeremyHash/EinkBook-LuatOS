@@ -135,11 +135,11 @@ function showBookList(index)
             end
             if info["index"] == index then
                 eink.rect(0, 16 * i, 200, 16 * (i + 1), 0, 1, nil, ifShow)
-                einkShowStr(0, 16 * (i + 1), bookName .. "          " .. string.format("%.2f", bookSize) .. "MB", 1,
-                    nil, ifShow)
+                einkShowStr(0, 16 * (i + 1), bookName .. "       " .. string.format("%.2f", bookSize) .. "MB", 1, nil,
+                    ifShow)
             else
-                einkShowStr(0, 16 * (i + 1), bookName .. "          " .. string.format("%.2f", bookSize) .. "MB", 0,
-                    nil, ifShow)
+                einkShowStr(0, 16 * (i + 1), bookName .. "       " .. string.format("%.2f", bookSize) .. "MB", 0, nil,
+                    ifShow)
             end
             i = i + 1
         end
@@ -298,7 +298,8 @@ sys.taskInit(function()
     eink.show(0, 0)
     eink.clear(1, true)
     eink.show(0, 0)
-    eink.setFont(eink.font_opposansm12_chinese)
+    eink.setFont(fonts.get("sarasa_regular_12"))
+
     if USE_SMARTCONFIG == true then
         einkShowStr(0, 16, "开机中 等待配网...", 0, false, true)
         local connectRes = wifiLib.connect()

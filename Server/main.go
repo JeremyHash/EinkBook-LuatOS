@@ -18,15 +18,6 @@ func errHandle(err error) {
 	}
 }
 
-func lineFormat(line string) string {
-	line = strings.ReplaceAll(line, ",", " ,  ")
-	line = strings.ReplaceAll(line, ".", " .  ")
-	line = strings.ReplaceAll(line, "?", " ?  ")
-	line = strings.ReplaceAll(line, "!", " !  ")
-	line = strings.ReplaceAll(line, ":", " :  ")
-	return line
-}
-
 func main() {
 	fileList, err := ioutil.ReadDir("./books")
 	errHandle(err)
@@ -53,8 +44,8 @@ func main() {
 				break
 			}
 			line = strings.Trim(line, " ")
-			line = strings.ReplaceAll(line, "，", ",")
-			line = strings.ReplaceAll(line, "。", ".")
+			// line = strings.ReplaceAll(line, "，", ",")
+			// line = strings.ReplaceAll(line, "。", ".")
 			line = strings.ReplaceAll(line, "“", "\"")
 			line = strings.ReplaceAll(line, "”", "\"")
 			line = strings.ReplaceAll(line, "？", "?")
@@ -76,21 +67,21 @@ func main() {
 		}
 		for _, line := range lines {
 			runeLine := []rune(line)
+			runeLine = append([]rune{' ', ' '}, runeLine...)
 			runeLineLen := len(runeLine)
-			if runeLineLen <= 12 {
-				showList = append(showList, "  "+lineFormat(line))
+			if runeLineLen <= 13 {
+				showList = append(showList, string(runeLine))
 			} else {
-				num := runeLineLen / 12
-				single := runeLineLen % 12
+				needSplitLen := runeLineLen - 13
+				showList = append(showList, string(runeLine[:13]))
+				num := needSplitLen / 12
+				single := needSplitLen % 12
+				runeLine = runeLine[13:]
 				for i := 0; i < num; i++ {
-					if i == 0 {
-						showList = append(showList, "  "+lineFormat(string(runeLine[12*i:12*i+12])))
-					} else {
-						showList = append(showList, lineFormat(string(runeLine[12*i:12*i+12])))
-					}
+					showList = append(showList, string(runeLine[12*i:12*i+12]))
 				}
 				if single != 0 {
-					showList = append(showList, lineFormat(string(runeLine[12*num:runeLineLen])))
+					showList = append(showList, string(runeLine[12*num:needSplitLen]))
 				}
 			}
 		}
